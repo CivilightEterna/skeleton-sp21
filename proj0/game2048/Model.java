@@ -106,6 +106,27 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    /*MD难死我了*/
+    //my_helper_function
+    public boolean moveTileUp(int col) {
+        boolean changed = false;
+        for (int j = board.size() - 1; j > 0; j--) {
+            if(board.tile(col,j)!=null) continue;
+            Tile next = null;
+            for(int k =  j-1;k>=0;k--) {
+                if(board.tile(col,k)!=null) {
+                    next = board.tile(col,k);//下一行
+                    break;
+                }
+            }
+            if(next!=null) {
+                board.move(col,j,next);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
@@ -113,6 +134,35 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        //设置view,本project的精髓
+        board.setViewingPerspective(side);
+        for(int i = 0; i<board.size(); i++) {
+            if(moveTileUp(i))
+                changed = true;
+        }
+        for(int i = 0; i<board.size(); i++) {
+            for(int j = board.size() - 1; j>=0; j--) {
+                Tile next = null;
+                for(int k = j-1;k>=0;k--) {
+                    if(board.tile(i,k)!=null) {
+                        next = board.tile(i,k);
+                        break;
+                    }
+                }
+            if(next!=null&&board.tile(i,j)==null) {
+                board.move(i,j,next);
+                changed = true;
+            }
+            else if(next!=null&&board.tile(i,j).value()==next.value()) {
+                board.move(i,j,next);
+                score+=next.value()*2;
+                changed = true;
+                moveTileUp(i);
+            }
+            }
+        }
+
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
@@ -138,6 +188,14 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int c = 0; c < b.size(); c++) {
+            for (int r = 0; r < b.size(); r++) {
+                Tile t = b.tile(c, r);
+                if(t == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +206,15 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int c = 0; c < b.size(); c++) {
+            for (int r = 0; r < b.size(); r++) {
+                Tile t = b.tile(c, r);
+                if(t == null) continue;
+                if(t.value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -157,8 +224,29 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+    /*至少有一个空格
+    * 有相同的值相等*/
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        /*
+         * 至少有一个空格
+         * 至少有一对相邻元素相等
+         * */
+        if (emptySpaceExists(b)) return true;
+        for (int c = 0; c < b.size(); c++) {
+            for (int r = 0; r < b.size(); r++) {
+                Tile t = b.tile(c,r);
+                if(t == null) continue;
+                //右边
+                if(r<b.size()-1){
+                    Tile right = b.tile(c,r+1);
+                    if(right!=null&&right.value()== t.value()) {return true;}}
+                //下边
+                if(c<b.size()-1){
+                    Tile down = b.tile(c+1,r);
+                    if(down!=null&&down.value()== t.value()) {return true;}}
+            }
+        }
         return false;
     }
 
